@@ -43,7 +43,7 @@ class Memory:
         retString = ""
         for i in range(numOfLines):
             lineData = self.data[i*bytesPerLine*8:i*bytesPerLine*8+bytesPerLine*8]
-            retString += "\n%s :"%(i*bytesPerLine)
+            retString += "\n% 3d :"%(i*bytesPerLine)
             for byte in range(bytesPerLine):
                 byteData = lineData[byte*8:byte*8+8]
                 retString += " " + "".join(byteData)
