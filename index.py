@@ -31,7 +31,11 @@ class Memory:
     def _util_getNextBits(self, bits):
         returnable = self.data[self.pointer : self.pointer + bits]
         self.pointer += bits
-        return "".join(returnable)
+        returnable = "".join(returnable)
+        if len(returnable) != bits:
+            print("[Mem] reached end of memory")
+            raise SystemExit
+        return returnable
 
     def _util_toString(self):
         bytesPerLine = 8
@@ -50,14 +54,19 @@ class Memory:
     def writeObj(self, obj):
         self._util_writeBinString(obj.toBin())
 
+    # READING
     def readObj(self):
         type_bin = self._util_getNextBits(8)
+        # check for empty memory?
+        while I().fromBin(2*type_bin) == 0:
+            type_bin = self._util_getNextBits(8)
+
         type = C().fromBin(type_bin)
         if type == "i": # Integer
             return Integer().fromMem(self)
         if type == "c": # Character
             return Character().fromMem(self)
-        if type == "s":
+        if type == "s": # String
             return String().fromMem(self)
         else:
             print("[Mem] found unknown type: " + type)
@@ -74,8 +83,10 @@ if __name__ == "__main__":
     a.writeObj(Character("s"))
     a.writeObj(String("Hello World"))
     a.pointer = 0 # reset to read stuff!
-    print(a.readObj())
-    print(a.readObj())
-    print(a.readObj())
+    while True:
+        try:
+            print(a.readObj())
+        except:
+            break
 
     print(a._util_toString())
