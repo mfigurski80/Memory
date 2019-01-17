@@ -77,7 +77,6 @@ class Reference(Obj):
     def toString(self): # overload toString method
         return "rf" + str(self.val)
 
-
 # Object for String
 # Size 24bit - Infinity
 # Max Val: 65535 characters
@@ -102,7 +101,6 @@ class String(Obj):
             self.val += C().fromBin(mem._util_getNextBits(8))
         return self
 
-
 # Object for Array
 # Size: 24bit - Infinity
 # Max Val: 65535 items
@@ -110,12 +108,21 @@ class Array(Obj):
     def __init__(self, val=[]):
         self.type="a"
         self.val = val
-        # self.val_type = val_type
     def toBin(self):
         returnable = C(self.type).toBin() + I(len(self.val)).toBin()
         for item in self.val:
             returnable += item.toBin()
         return returnable
+    def fromBin(self, bin):
+        self.val = []
+        length = I().fromBin(bin[8:24])
+        bits_passed = 24
+        for i in range(length):
+            next_type = C().fromBin(bin[bits_passed:bits_passed+8])
+            next = objects[next_type]().fromBin(bin[bits_passed+8:])
+            bits_passed += len(next.toBin())
+            self.val.append(next)
+        return self
     def fromMem(self, mem):
         self.val = []
         length = I().fromBin(mem._util_getNextBits(16))
