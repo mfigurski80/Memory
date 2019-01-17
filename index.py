@@ -39,7 +39,7 @@ class Memory:
 
     def _util_toString(self):
         bytesPerLine = 8
-        numOfLines = math.ceil(len(self.data) / (bytesPerLine * 8)) # 4 bytes per line
+        numOfLines = math.ceil(len(self.data) / (bytesPerLine * 8))
         retString = ""
         for i in range(numOfLines):
             lineData = self.data[i*bytesPerLine*8:i*bytesPerLine*8+bytesPerLine*8]
@@ -62,12 +62,8 @@ class Memory:
             type_bin = self._util_getNextBits(8)
 
         type = C().fromBin(type_bin)
-        if type == "i": # Integer
-            return Integer().fromMem(self)
-        if type == "c": # Character
-            return Character().fromMem(self)
-        if type == "s": # String
-            return String().fromMem(self)
+        if type in objects:
+            return objects[type]().fromMem(self)
         else:
             print("[Mem] found unknown type: " + type)
             raise SystemExit
@@ -79,13 +75,20 @@ class Memory:
 if __name__ == "__main__":
     a = Memory("mem.txt")
 
-    a.writeObj(Integer(14))
-    a.writeObj(Character("s"))
-    a.writeObj(String("Hello World"))
+    # a.writeObj(Integer(14))
+    # a.writeObj(Character("s"))
+    # a.writeObj(String("Hello World"))
+    a.writeObj(Reference(3))
+    a.writeObj(Array([Integer(14), String("Hey array")]))
+    # a.writeObj(Array([Reference(5), Reference(0), Reference(3)]))
     a.pointer = 0 # reset to read stuff!
     while True:
         try:
-            print(a.readObj())
+            obj = a.readObj()
+            if (obj.type == "r"): # if its a reference
+                print(obj.toString() + " -- " + obj.resolve(a).toString())
+            else:
+                print(obj.toString())
         except:
             break
 
