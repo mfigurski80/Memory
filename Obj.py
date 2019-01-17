@@ -130,8 +130,40 @@ class Array(Obj):
             self.val.append(mem.readObj())
         return self
     def toString(self):
-        return "[" + ",".join([item.toString() for item in self.val]) + "]"
+        return "[" + ", ".join([item.toString() for item in self.val]) + "]"
 
+# Object for Array with specific type -- saves space over normal array, doesn't need type on children
+# Size: 32bit - Infinity
+# Max Val: 65535 items
+class TypeArray(Obj):
+    def __init__(self, val=[], val_type="i"):
+        self.type = "t"
+        self.val = val
+        self.val_type = val_type
+    def toBin(self):
+        returnable = C(self.type).toBin() + C(self.val_type).toBin() + I(len(self.val)).toBin()
+        for item in self.val:
+            returnable += item.toBin()[8:] # cut out type
+        return returnable
+    def fromBin(self, bin):
+        self.val = []
+        self.val_type = C().fromBin(bin[8:16])
+        self.length = I().fromBin(bin[16:32])
+        bits_passed = 32
+        for i in range(length):
+            next = objects[self.val_type]().fromBin(bin[bits_passed+8:])
+            bits_passed += len(next.toBin())
+            self.val.append(next)
+        return self
+    def fromMem(self, mem):
+        self.val = []
+        self.val_type = C().fromBin(mem._util_getNextBits(8)) # grab val_type
+        length = I().fromBin(mem._util_getNextBits(16)) # grab length
+        for i in range(length):
+            self.val.append(objects[self.val_type]().fromMem(mem))
+        return self
+    def toString(self):
+        return "<" + self.val_type + ">[" + ", ".join([item.toString() for item in self.val]) + "]"
 
 
 
@@ -140,5 +172,6 @@ objects = {
     "c": Character,
     "s": String,
     "r": Reference,
-    "a": Array
+    "a": Array,
+    "t": TypeArray
 }
