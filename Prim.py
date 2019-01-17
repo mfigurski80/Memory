@@ -18,7 +18,7 @@ class I(Prim):
     def toBin(self):
         return "%016d"%int(str(bin(self.val))[2:]) # convert content to 16bit
     def fromBin(self, bin):
-        self.val = int(bin[8:24],2)
+        self.val = int(bin[0:16],2)
         return self.val
 
 # Primitive for (C)haracters!
