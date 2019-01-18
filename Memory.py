@@ -43,10 +43,11 @@ class Memory:
         retString = ""
         for i in range(numOfLines):
             lineData = self.data[i*bytesPerLine*8:i*bytesPerLine*8+bytesPerLine*8]
-            retString += "\n% 4d :"%(i*bytesPerLine)
+            retString += "% 4d :"%(i*bytesPerLine)
             for byte in range(bytesPerLine):
                 byteData = lineData[byte*8:byte*8+8]
                 retString += " " + "".join(byteData)
+            retString += "\n"
         return retString
 
 
@@ -68,28 +69,18 @@ class Memory:
             print("[Mem] found unknown type: " + type)
             raise SystemExit
 
-
+    # DELETING
+    def deleteObj(self):
+        old_pointer = self.pointer
+        obj = self.readObj()
+        len_to_delete = self.pointer - old_pointer
+        # actually overwrite all
+        self.pointer = old_pointer
+        self._util_writeBinString("0" * len_to_delete)
+        return obj
 
 
 
 if __name__ == "__main__":
     a = Memory("mem.txt")
-
-    # a.writeObj(Integer(14))
-    # a.writeObj(Character("s"))
-    # a.writeObj(String("Hello World"))
-    a.writeObj(Reference(3))
-    a.writeObj(Array([Integer(14), String("Hey array")]))
-    # a.writeObj(Array([Reference(5), Reference(0), Reference(3)]))
-    a.pointer = 0 # reset to read stuff!
-    while True:
-        try:
-            obj = a.readObj()
-            if (obj.type == "r"): # if its a reference
-                print(obj.toString() + " -- " + obj.resolve(a).toString())
-            else:
-                print(obj.toString())
-        except:
-            break
-
     print(a.toString())

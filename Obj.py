@@ -136,10 +136,12 @@ class Array(Obj):
 # Size: 32bit - Infinity
 # Max Val: 65535 items
 class TypeArray(Obj):
-    def __init__(self, val=[], val_type="i"):
+    def __init__(self, val=[]):
         self.type = "t"
         self.val = val
-        self.val_type = val_type
+        self.val_type = "i"
+        if val != []:
+            self.val_type = val[0].type
     def toBin(self):
         returnable = C(self.type).toBin() + C(self.val_type).toBin() + I(len(self.val)).toBin()
         for item in self.val:
@@ -165,7 +167,37 @@ class TypeArray(Obj):
     def toString(self):
         return "<" + self.val_type + ">[" + ", ".join([item.toString() for item in self.val]) + "]"
 
-
+# Object for DataStructure -- saves LOTS space over 2d Array
+# Size: 64bit - INFINITY
+# Max Val: 65535 entries with 65535 fields each
+class DataStr(Obj):
+    def __init__(self, val=[[]]):
+        self.type = "d"
+        self.val = val
+        self.types = val[0]
+        self.entries = val[1:]
+    def toBin(self):
+        returnable = C(self.type).toBin() + TypeArray([Character(i) for i in self.types]).toBin()[8:] + I(len(self.entries)).toBin()
+        for entry in self.entries:
+            for field_pos in range(len(self.types)):
+                returnable += objects[self.types[field_pos]](entry[field_pos]).toBin()[8:] #remove type identifier
+        return returnable
+    def fromBin(self, bin):
+        return self.val
+    def fromMem(self, mem):
+        self.types = TypeArray().fromMem(mem)
+        self.val = [self.types]
+        length = I().fromBin(mem._util_getNextBits(16))
+        self.entries = []
+        for i in range(length): # for each entry
+            entry = []
+            for field_pos in range(len(self.types.val)): # for each field
+                entry.append(objects[self.types.val[field_pos].val]().fromMem(mem))
+            self.entries.append(entry)
+        self.val += self.entries
+        return self
+    def toString(self):
+        return str(", ".join([i.val for i in self.val[0].val]) + "".join(["\n " + ", ".join([j.toString() for j in i]) for i in self.val[1:]]))
 
 objects = {
     "i": Integer,
@@ -173,5 +205,6 @@ objects = {
     "s": String,
     "r": Reference,
     "a": Array,
-    "t": TypeArray
+    "t": TypeArray,
+    "d": DataStr
 }
